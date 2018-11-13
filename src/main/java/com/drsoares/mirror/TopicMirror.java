@@ -1,4 +1,4 @@
-package com.drsoares.kafka.mirror;
+package com.drsoares.mirror;
 
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.producer.ProducerRecord;

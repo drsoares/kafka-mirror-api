@@ -1,5 +1,6 @@
-package com.drsoares.kafka.mirror;
+package com.drsoares.mirror.kafka;
 
+import com.drsoares.mirror.TopicMirror;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.common.header.Header;
@@ -15,7 +16,7 @@ import java.util.stream.StreamSupport;
 
 public class DefaultTopicMirror implements TopicMirror {
 
-    private static final String HEADER_KEY = "Mirror";
+    private static final String HEADER_KEY = "KafkaMirror";
     private static final Predicate<Header> CONTAINS_HEADER_PREDICATE = header -> header.key().equals(HEADER_KEY);
 
     private String hostname;
