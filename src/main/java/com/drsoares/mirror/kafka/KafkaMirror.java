@@ -12,47 +12,39 @@ import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.common.serialization.ByteArrayDeserializer;
 import org.apache.kafka.common.serialization.ByteArraySerializer;
 
-import java.util.List;
 import java.util.Objects;
 import java.util.Properties;
+import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
 
 public class KafkaMirror implements Mirror {
 
     private volatile boolean consuming;
 
-    private final String whitelist;
+    private final Set<String> topicsToSubscribe;
     private final String sourceBootStrapServers;
     private final String destinationBootStrapServers;
     private final TopicMirror topicMirror;
 
-    public KafkaMirror(String whitelist,
-                       String sourceBootStrapServers,
-                       String destinationBootStrapServers,
-                       TopicMirror topicMirror) {
-        this.whitelist = whitelist;
+    public KafkaMirror(Set<String> topicsToSubscribe,
+                String sourceBootStrapServers,
+                String destinationBootStrapServers,
+                TopicMirror topicMirror) {
+        this.topicsToSubscribe = topicsToSubscribe;
         this.sourceBootStrapServers = sourceBootStrapServers;
         this.destinationBootStrapServers = destinationBootStrapServers;
         this.topicMirror = topicMirror;
     }
 
-    private AdminClient adminClient;
     private KafkaProducer producer;
     private KafkaConsumer consumer;
 
     @Override
     public void start() {
         try {
-            List<String> topics = getAdminClient().listTopics()
-                    .names().get()
-                    .stream()
-                    .filter(name -> name.matches(whitelist))
-                    .collect(Collectors.toList());
-
             Consumer<byte[], byte[]> consumer = getConsumer();
-            consumer.subscribe(topics);
+            consumer.subscribe(topicsToSubscribe);
 
             consuming = true;
             while (consuming) {
@@ -91,15 +83,6 @@ public class KafkaMirror implements Mirror {
             producer = new KafkaProducer<>(props);
         }
         return producer;
-    }
-
-    private AdminClient getAdminClient() {
-        if (Objects.isNull(adminClient)) {
-            Properties properties = new Properties();
-            properties.setProperty(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, sourceBootStrapServers);
-            adminClient = AdminClient.create(properties);
-        }
-        return adminClient;
     }
 
     @Override
