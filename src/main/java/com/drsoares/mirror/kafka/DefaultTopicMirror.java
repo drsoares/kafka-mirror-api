@@ -1,7 +1,6 @@
 package com.drsoares.mirror.kafka;
 
 import com.drsoares.mirror.TopicMirror;
-import com.google.common.collect.Maps;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.common.header.Header;
@@ -24,7 +23,7 @@ public class DefaultTopicMirror implements TopicMirror {
     private final Map<String, String> topicMapping;
 
     public DefaultTopicMirror() {
-        this(Maps.newHashMap());
+        this(new HashMap<>());
     }
 
     public DefaultTopicMirror(Map<String, String> topicMapping) {
@@ -34,8 +33,18 @@ public class DefaultTopicMirror implements TopicMirror {
     @Override
     public List<ProducerRecord<byte[], byte[]>> handle(Iterable<ConsumerRecord<byte[], byte[]>> records) {
         return StreamSupport.stream(records.spliterator(), false)
-                .filter((record) -> StreamSupport.stream(record.headers().spliterator(), false).noneMatch(CONTAINS_HEADER_PREDICATE))
-                .map((record) -> new ProducerRecord<>(revolveTopic(record), record.partition(), record.key(), record.value(), Collections.singletonList(new RecordHeader(HEADER_KEY, getHostname().getBytes()))))
+                .filter((record) ->
+                        StreamSupport.stream(record.headers().spliterator(), false)
+                                .noneMatch(CONTAINS_HEADER_PREDICATE)
+                )
+                .map((record) ->
+                        new ProducerRecord<>(revolveTopic(record),
+                                record.partition(),
+                                record.key(),
+                                record.value(),
+                                Collections.singletonList(new RecordHeader(HEADER_KEY, getHostname().getBytes()))
+                        )
+                )
                 .collect(Collectors.toList());
     }
 

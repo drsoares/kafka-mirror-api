@@ -10,9 +10,10 @@
     <packaging>jar</packaging>
 
     <properties>
-        <kafka-clients.version>1.0.0</kafka-clients.version>
+        <kafka-clients.version>1.1.1</kafka-clients.version>
         <java.version>1.8</java.version>
         <kafka-junit5.version>3.0.1</kafka-junit5.version>
+        <kafka_2.11.version>1.1.1</kafka_2.11.version>
     </properties>
 
     <dependencies>
@@ -21,10 +22,18 @@
             <artifactId>kafka-clients</artifactId>
             <version>${kafka-clients.version}</version>
         </dependency>
+
         <dependency>
             <groupId>com.salesforce.kafka.test</groupId>
             <artifactId>kafka-junit5</artifactId>
             <version>${kafka-junit5.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.kafka</groupId>
+            <artifactId>kafka_2.11</artifactId>
+            <version>${kafka_2.11.version}</version>
+            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.junit.jupiter</groupId>

@@ -2,7 +2,6 @@ package com.drsoares.mirror.kafka;
 
 import com.drsoares.mirror.Mirror;
 import com.drsoares.mirror.TopicMirror;
-import org.apache.kafka.clients.admin.AdminClient;
 import org.apache.kafka.clients.consumer.Consumer;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
@@ -21,6 +20,7 @@ import java.util.concurrent.TimeUnit;
 public class KafkaMirror implements Mirror {
 
     private volatile boolean consuming;
+    private volatile boolean ended;
 
     private final Set<String> topicsToSubscribe;
     private final String sourceBootStrapServers;
@@ -28,9 +28,9 @@ public class KafkaMirror implements Mirror {
     private final TopicMirror topicMirror;
 
     public KafkaMirror(Set<String> topicsToSubscribe,
-                String sourceBootStrapServers,
-                String destinationBootStrapServers,
-                TopicMirror topicMirror) {
+                       String sourceBootStrapServers,
+                       String destinationBootStrapServers,
+                       TopicMirror topicMirror) {
         this.topicsToSubscribe = topicsToSubscribe;
         this.sourceBootStrapServers = sourceBootStrapServers;
         this.destinationBootStrapServers = destinationBootStrapServers;
@@ -47,16 +47,17 @@ public class KafkaMirror implements Mirror {
             consumer.subscribe(topicsToSubscribe);
 
             consuming = true;
-            while (consuming) {
+            do {
                 for (ProducerRecord<byte[], byte[]> producerRecord : topicMirror.handle(consumer.poll(1000L))) {
                     getProducer().send(producerRecord).get();
                 }
                 getConsumer().commitSync();
                 TimeUnit.MILLISECONDS.sleep(10L); //TODO - review value
-            }
+            } while (consuming);
         } catch (ExecutionException | InterruptedException ex) {
             throw new RuntimeException(ex);
         }
+        ended = true;
     }
 
     private Consumer<byte[], byte[]> getConsumer() {
@@ -87,8 +88,15 @@ public class KafkaMirror implements Mirror {
 
     @Override
     public void stop() {
+        consuming = false;
+        while (!ended) {
+            try {
+                TimeUnit.MILLISECONDS.sleep(10L);
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+        }
         getConsumer().close();
         getProducer().close();
-        consuming = false;
     }
 }
