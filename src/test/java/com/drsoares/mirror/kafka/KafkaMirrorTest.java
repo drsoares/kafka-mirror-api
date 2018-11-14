@@ -6,6 +6,8 @@ import com.salesforce.kafka.test.junit5.SharedKafkaTestResource;
 import org.apache.kafka.clients.consumer.Consumer;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
+import org.apache.kafka.clients.consumer.KafkaConsumer;
+import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.apache.kafka.common.serialization.StringSerializer;
@@ -24,57 +26,47 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 class KafkaMirrorTest {
 
     @RegisterExtension
-    public static final SharedKafkaTestResource source = new SharedKafkaTestResource().withBrokers(1);
+    public static final SharedKafkaTestResource kafka = new SharedKafkaTestResource().withBrokers(1);
 
     @Test
     void kafkaMirrorShouldReplicateDataCrossBrokers() throws ExecutionException, InterruptedException {
-        source.getKafkaBrokers().forEach(kafkaBroker -> {
-            try {
-                kafkaBroker.start();
-            } catch (Exception e) {
-                throw new RuntimeException(e);
-            }
-        });
-
-        source.getKafkaTestUtils().createTopic("source", 2, (short) 1);
-        source.getKafkaTestUtils().createTopic("mirror", 2, (short) 1);
-
         Map<String, String> map = new HashMap<>();
         map.put("source", "mirror");
 
-        Mirror kafkaMirror = new KafkaMirror(Sets.newHashSet("source"), source.getKafkaConnectString(), source.getKafkaConnectString(), new DefaultTopicMirror(map));
-        Thread thread = new Thread(kafkaMirror::start);
-        thread.start();
+        Mirror kafkaMirror = new KafkaMirror(Sets.newHashSet("source"), kafka.getKafkaConnectString(), kafka.getKafkaConnectString(), new DefaultTopicMirror(map));
+        new Thread(kafkaMirror::start).start();
 
-        source.getKafkaTestUtils().getKafkaProducer(StringSerializer.class, StringSerializer.class).send(new ProducerRecord<>("source", "key1", "value1")).get();
-        source.getKafkaTestUtils().getKafkaProducer(StringSerializer.class, StringSerializer.class).send(new ProducerRecord<>("source", "key2", "value2")).get();
-        source.getKafkaTestUtils().getKafkaProducer(StringSerializer.class, StringSerializer.class).send(new ProducerRecord<>("source", "key3", "value3")).get();
-        source.getKafkaTestUtils().getKafkaProducer(StringSerializer.class, StringSerializer.class).send(new ProducerRecord<>("source", "key4", "value4")).get();
+        KafkaProducer<String, String> producer = getProducer();
+        producer.send(new ProducerRecord<>("source", "key1", "value1")).get();
+        producer.send(new ProducerRecord<>("source", "key2", "value2")).get();
+        producer.send(new ProducerRecord<>("source", "key3", "value3")).get();
+        producer.send(new ProducerRecord<>("source", "key4", "value4")).get();
 
-        TimeUnit.MILLISECONDS.sleep(1000L);
+        TimeUnit.SECONDS.sleep(5L);
 
         kafkaMirror.stop();
 
+        Consumer<String, String> consumer = getConsumer();
+        consumer.subscribe(Collections.singleton("mirror"));
+        ConsumerRecords<String, String> records = consumer.poll(100L);
+
+        assertEquals(4, records.count());
+    }
+
+    private KafkaProducer<String, String> getProducer() {
         Properties props = new Properties();
-        props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, source.getKafkaConnectString());
+        props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, kafka.getKafkaConnectString());
+        return kafka.getKafkaTestUtils().getKafkaProducer(StringSerializer.class, StringSerializer.class, props);
+    }
+
+    private KafkaConsumer<String, String> getConsumer() {
+        Properties props = new Properties();
+        props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, kafka.getKafkaConnectString());
         props.put(ConsumerConfig.GROUP_ID_CONFIG, "test_kafka_mirror");
         props.put(ConsumerConfig.AUTO_COMMIT_INTERVAL_MS_CONFIG, 100);
         props.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
         props.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, true);
-
-        Consumer<String, String> consumer = source.getKafkaTestUtils().getKafkaConsumer(StringDeserializer.class, StringDeserializer.class, props);
-        consumer.subscribe(Collections.singleton("mirror"));
-        ConsumerRecords<String, String> records = consumer.poll(100L);
-
-        assertEquals(1, records.count());
-
-        source.getKafkaBrokers().forEach(kafkaBroker -> {
-            try {
-                kafkaBroker.stop();
-            } catch (Exception e) {
-                throw new RuntimeException(e);
-            }
-        });
+        return kafka.getKafkaTestUtils().getKafkaConsumer(StringDeserializer.class, StringDeserializer.class, props);
     }
 
 }

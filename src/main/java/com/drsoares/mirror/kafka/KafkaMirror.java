@@ -48,10 +48,10 @@ public class KafkaMirror implements Mirror {
 
             consuming = true;
             do {
-                for (ProducerRecord<byte[], byte[]> producerRecord : topicMirror.handle(consumer.poll(1000L))) {
+                for (ProducerRecord<byte[], byte[]> producerRecord : topicMirror.handle(consumer.poll(100L))) {
                     getProducer().send(producerRecord).get();
                 }
-                getConsumer().commitSync();
+       //         getConsumer().commitSync();
                 TimeUnit.MILLISECONDS.sleep(10L); //TODO - review value
             } while (consuming);
         } catch (ExecutionException | InterruptedException ex) {
