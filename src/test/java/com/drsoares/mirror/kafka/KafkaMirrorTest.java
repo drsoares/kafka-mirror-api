@@ -21,7 +21,7 @@ import static org.mockito.Mockito.*;
 class KafkaMirrorTest {
 
     @Test
-    void kafkaMirrorShouldReplicateDataCrossBrokers() throws ExecutionException, InterruptedException, NoSuchFieldException {
+    void kafkaMirrorShouldReplicateDataCrossBrokers() throws ExecutionException, InterruptedException {
         Producer<byte[], byte[]> producer = mock(Producer.class);
         Consumer<byte[], byte[]> consumer = mock(Consumer.class);
         RecordTransformer recordTransformer = mock(RecordTransformer.class);
