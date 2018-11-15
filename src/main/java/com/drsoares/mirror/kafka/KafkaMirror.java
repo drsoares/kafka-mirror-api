@@ -6,6 +6,7 @@ import org.apache.kafka.clients.consumer.Consumer;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.clients.producer.KafkaProducer;
+import org.apache.kafka.clients.producer.Producer;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.common.serialization.ByteArrayDeserializer;
@@ -37,8 +38,8 @@ public class KafkaMirror implements Mirror {
         this.topicMirror = topicMirror;
     }
 
-    private KafkaProducer producer;
-    private KafkaConsumer consumer;
+    Producer<byte[], byte[]> producer;
+    Consumer<byte[], byte[]> consumer;
 
     @Override
     public void start() {
@@ -51,7 +52,7 @@ public class KafkaMirror implements Mirror {
                 for (ProducerRecord<byte[], byte[]> producerRecord : topicMirror.handle(consumer.poll(100L))) {
                     getProducer().send(producerRecord).get();
                 }
-       //         getConsumer().commitSync();
+                getConsumer().commitSync();
                 TimeUnit.MILLISECONDS.sleep(10L); //TODO - review value
             } while (consuming);
         } catch (ExecutionException | InterruptedException ex) {
@@ -75,7 +76,7 @@ public class KafkaMirror implements Mirror {
         return consumer;
     }
 
-    private KafkaProducer<byte[], byte[]> getProducer() {
+    private Producer<byte[], byte[]> getProducer() {
         if (Objects.isNull(producer)) {
             Properties props = new Properties();
             props.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, destinationBootStrapServers);
