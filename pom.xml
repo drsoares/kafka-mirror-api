@@ -16,6 +16,7 @@
         <kafka_2.11.version>1.1.1</kafka_2.11.version>
         <junit.jupiter.version>5.3.1</junit.jupiter.version>
         <maven-surefire-plugin.version>2.22.0</maven-surefire-plugin.version>
+        <mockito-core.version>2.23.0</mockito-core.version>
     </properties>
 
     <dependencies>
@@ -45,7 +46,7 @@
         <dependency>
             <groupId>org.mockito</groupId>
             <artifactId>mockito-core</artifactId>
-            <version>RELEASE</version>
+            <version>${mockito-core.version}</version>
             <scope>test</scope>
         </dependency>
     </dependencies>
