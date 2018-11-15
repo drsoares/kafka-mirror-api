@@ -48,7 +48,7 @@ class KafkaMirrorTest {
 
         new Thread(kafkaMirror::start).start();
 
-        TimeUnit.MILLISECONDS.sleep(1000L);
+        TimeUnit.MILLISECONDS.sleep(100L);
 
         kafkaMirror.stop();
 
