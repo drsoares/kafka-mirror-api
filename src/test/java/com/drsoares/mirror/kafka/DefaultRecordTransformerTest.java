@@ -12,11 +12,11 @@ import java.util.stream.StreamSupport;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-class DefaultTopicMirrorTest {
+class DefaultRecordTransformerTest {
 
     @Test
     void topicMirrorShouldTransformConsumedRecordsInProducedRecordsWithAKafkaMirrorHeader() {
-        DefaultTopicMirror defaultTopicMirror = new DefaultTopicMirror();
+        DefaultRecordTransformer defaultTopicMirror = new DefaultRecordTransformer();
 
         String key = "key";
         String value = "value";
@@ -38,7 +38,7 @@ class DefaultTopicMirrorTest {
     void topicMirrorShouldTransformConsumedRecordsInProducedRecordsWithAKafkaMirrorHeaderToUsingTheTopicMapping() {
         Map<String, String> topicMapping = new HashMap<>();
         topicMapping.put("input", "output");
-        DefaultTopicMirror defaultTopicMirror = new DefaultTopicMirror(topicMapping);
+        DefaultRecordTransformer defaultTopicMirror = new DefaultRecordTransformer(topicMapping);
 
         String key = "key";
         String value = "value";
@@ -58,7 +58,7 @@ class DefaultTopicMirrorTest {
 
     @Test
     void topicMirrorShouldIgnoreMirroredRecords() {
-        DefaultTopicMirror defaultTopicMirror = new DefaultTopicMirror();
+        DefaultRecordTransformer defaultTopicMirror = new DefaultRecordTransformer();
 
         String key = "key";
         String value = "value";

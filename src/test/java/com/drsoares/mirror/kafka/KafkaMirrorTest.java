@@ -1,6 +1,6 @@
 package com.drsoares.mirror.kafka;
 
-import com.drsoares.mirror.TopicMirror;
+import com.drsoares.mirror.RecordTransformer;
 import org.apache.kafka.clients.consumer.Consumer;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.producer.Producer;
@@ -24,20 +24,20 @@ class KafkaMirrorTest {
     void kafkaMirrorShouldReplicateDataCrossBrokers() throws ExecutionException, InterruptedException, NoSuchFieldException {
         Producer<byte[], byte[]> producer = mock(Producer.class);
         Consumer<byte[], byte[]> consumer = mock(Consumer.class);
-        TopicMirror topicMirror = mock(TopicMirror.class);
+        RecordTransformer recordTransformer = mock(RecordTransformer.class);
 
         KafkaMirror kafkaMirror = new KafkaMirror(
                 Collections.singleton("topic"),
                 "sourbroker:9092",
                 "destinationbroker:9092",
-                topicMirror
+                recordTransformer
         );
         kafkaMirror.consumer = consumer;
         kafkaMirror.producer = producer;
 
         when(consumer.poll(anyLong())).thenReturn(mock(ConsumerRecords.class));
         List<ProducerRecord<byte[], byte[]>> recordsToProduce = Collections.singletonList(mock(ProducerRecord.class));
-        when(topicMirror.handle(anyIterable())).thenReturn(recordsToProduce);
+        when(recordTransformer.handle(anyIterable())).thenReturn(recordsToProduce);
 
         Future<RecordMetadata> future = mock(Future.class);
         doReturn(null).when(future).get();

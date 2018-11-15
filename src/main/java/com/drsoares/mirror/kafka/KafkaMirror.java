@@ -1,7 +1,7 @@
 package com.drsoares.mirror.kafka;
 
 import com.drsoares.mirror.Mirror;
-import com.drsoares.mirror.TopicMirror;
+import com.drsoares.mirror.RecordTransformer;
 import org.apache.kafka.clients.consumer.Consumer;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
@@ -18,6 +18,10 @@ import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
+/**
+ * This class is a Kafka Mirror, it consumes records from a topic or multiple topics and publishes them to a correspondent one
+ * into a target broker, or even the same broker.
+ */
 public class KafkaMirror implements Mirror {
 
     private volatile boolean consuming;
@@ -26,16 +30,23 @@ public class KafkaMirror implements Mirror {
     private final Set<String> topicsToSubscribe;
     private final String sourceBootStrapServers;
     private final String destinationBootStrapServers;
-    private final TopicMirror topicMirror;
+    private final RecordTransformer recordTransformer;
 
+    /**
+     * Constructor
+     * @param topicsToSubscribe - a Set of topics to be mirrored
+     * @param sourceBootStrapServers - source bootstrap servers, from which data is consumed
+     * @param destinationBootStrapServers - target bootstrap servers, for which data will be written
+     * @param recordTransformer - strategy to convert records from the source to the target
+     */
     public KafkaMirror(Set<String> topicsToSubscribe,
                        String sourceBootStrapServers,
                        String destinationBootStrapServers,
-                       TopicMirror topicMirror) {
+                       RecordTransformer recordTransformer) {
         this.topicsToSubscribe = topicsToSubscribe;
         this.sourceBootStrapServers = sourceBootStrapServers;
         this.destinationBootStrapServers = destinationBootStrapServers;
-        this.topicMirror = topicMirror;
+        this.recordTransformer = recordTransformer;
     }
 
     Producer<byte[], byte[]> producer;
@@ -49,11 +60,11 @@ public class KafkaMirror implements Mirror {
 
             consuming = true;
             do {
-                for (ProducerRecord<byte[], byte[]> producerRecord : topicMirror.handle(consumer.poll(100L))) {
+                for (ProducerRecord<byte[], byte[]> producerRecord : recordTransformer.handle(consumer.poll(100L))) {
                     getProducer().send(producerRecord).get();
                 }
                 getConsumer().commitSync();
-                TimeUnit.MILLISECONDS.sleep(10L); //TODO - review value
+                TimeUnit.MILLISECONDS.sleep(10L);
             } while (consuming);
         } catch (ExecutionException | InterruptedException ex) {
             throw new RuntimeException(ex);

@@ -1,6 +1,6 @@
 package com.drsoares.mirror.kafka;
 
-import com.drsoares.mirror.TopicMirror;
+import com.drsoares.mirror.RecordTransformer;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.common.header.Header;
@@ -13,7 +13,12 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
-public class DefaultTopicMirror implements TopicMirror {
+/**
+ * This class is a default implementation for a record transformer, in which preserves the key and the value form the source topic
+ * and enriches it with an Header just to provide the visibility that the record has been mirrored, it also has the ability
+ * to map the record to a different topic
+ */
+public class DefaultRecordTransformer implements RecordTransformer {
 
     private static final String HEADER_KEY = "KafkaMirror";
     private static final Predicate<Header> CONTAINS_HEADER_PREDICATE = header -> header.key().equals(HEADER_KEY);
@@ -22,11 +27,11 @@ public class DefaultTopicMirror implements TopicMirror {
 
     private final Map<String, String> topicMapping;
 
-    public DefaultTopicMirror() {
+    public DefaultRecordTransformer() {
         this(new HashMap<>());
     }
 
-    public DefaultTopicMirror(Map<String, String> topicMapping) {
+    public DefaultRecordTransformer(Map<String, String> topicMapping) {
         this.topicMapping = topicMapping;
     }
 
