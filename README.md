@@ -20,6 +20,13 @@ and launch a process, which makes difficult to embed inside of an app, control w
 It can be used for other scenarios like active/active, in which data to be computed from one DC can be replicated to the other DC. 
 However, if you go for active/active and you're writing for both DCs but just reading from one source, you may lose order.
 
+
+### Requirements
+
+* Java 8
+* Maven
+* Kafka >= 1.1.0
+
 ### Getting Started
 
 Currently this artifact is not available in any public artifactory. So you need to clone and install it.
