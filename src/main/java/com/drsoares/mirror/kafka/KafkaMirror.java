@@ -52,6 +52,10 @@ public class KafkaMirror implements Mirror {
     Producer<byte[], byte[]> producer;
     Consumer<byte[], byte[]> consumer;
 
+    /**
+     * Starts the kafka mirror, it will consume the data from topics to subscribe and will publish them to another kafka broker
+     * NOTICE: This method is blocking!
+     */
     @Override
     public void start() {
         try {
