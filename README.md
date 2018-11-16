@@ -6,7 +6,7 @@
                                                                                                                                                       
 
                                         
-A Java Api to enable mirroring topic(s) from one broker to another.
+A Java Api to enable mirroring topic(s) from one kafka broker to another.
 
 ### The problem
 
