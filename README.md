@@ -23,7 +23,7 @@ However, if you go for active/active and you're writing for both DCs but just re
 
 ### Requirements
 
-* Java 8
+* Java >= 8
 * Maven
 * Kafka >= 1.1.0
 
