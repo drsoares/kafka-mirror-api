@@ -12,8 +12,8 @@ A Java Api to enable mirroring topic(s) from one kafka broker to another.
 
 This API was designed to solve a particular problem which was to create async replicas of a kafka topic in a different data center (DC).
 
-Other mirror are basically wrappers of the binary _kafka-mirror-maker.sh_ that is installed along with **kafka**, 
-and launch a process, which makes difficult to embed inside of an app, control when it starts and when it stops and to monitor it.
+Other kafka mirror solutions are mostly wrappers of the binary _kafka-mirror-maker.sh_ that is installed along with **kafka**, 
+and launch a process, which makes difficult to embed it inside of an app, control when it starts and when it stops or to monitor it.
 
 ### Other Scenarios 
 
