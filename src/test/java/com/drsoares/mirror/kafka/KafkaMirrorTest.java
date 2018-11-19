@@ -19,11 +19,9 @@ import static org.mockito.ArgumentMatchers.anyCollection;
 import static org.mockito.ArgumentMatchers.anyIterable;
 import static org.mockito.Mockito.*;
 
-ø
-
 class KafkaMirrorTest {
 
-    private static final RecordMetadata DUMMY_RECORD_METATADA = new RecordMetadata(new TopicPartition("topic", 1), 0L, 0L, System.currentTimeMillis(),
+    private static final RecordMetadata DUMMY_RECORD_METADATA = new RecordMetadata(new TopicPartition("topic", 1), 0L, 0L, System.currentTimeMillis(),
             0L, 0, 0);
 
     @Test
@@ -46,7 +44,7 @@ class KafkaMirrorTest {
         when(recordTransformer.handle(anyIterable())).thenReturn(recordsToProduce);
 
         Future<RecordMetadata> future = mock(Future.class);
-        doReturn(DUMMY_RECORD_METATADA).when(future).get();
+        doReturn(DUMMY_RECORD_METADATA).when(future).get();
 
         doNothing().when(consumer).subscribe(anyCollection());
         doNothing().when(consumer).commitSync();
@@ -87,7 +85,7 @@ class KafkaMirrorTest {
         when(recordTransformer.handle(anyIterable())).thenReturn(recordsToProduce);
 
         Future<RecordMetadata> future = mock(Future.class);
-        doReturn(DUMMY_RECORD_METATADA).when(future).get();
+        doReturn(DUMMY_RECORD_METADATA).when(future).get();
 
         doNothing().when(consumer).subscribe(anyCollection());
         doNothing().when(consumer).commitSync();
@@ -125,7 +123,7 @@ class KafkaMirrorTest {
         when(recordTransformer.handle(anyIterable())).thenReturn(recordsToProduce);
 
         Future<RecordMetadata> future = mock(Future.class);
-        when(future.get()).thenReturn(DUMMY_RECORD_METATADA);
+        when(future.get()).thenReturn(DUMMY_RECORD_METADATA);
 
         doNothing().when(consumer).subscribe(anyCollection());
         doNothing().when(consumer).commitSync();
