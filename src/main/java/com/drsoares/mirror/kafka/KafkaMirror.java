@@ -11,11 +11,12 @@ import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.common.serialization.ByteArrayDeserializer;
 import org.apache.kafka.common.serialization.ByteArraySerializer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Objects;
 import java.util.Properties;
 import java.util.Set;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -24,6 +25,8 @@ import java.util.concurrent.TimeUnit;
  */
 public class KafkaMirror implements Mirror {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(KafkaMirror.class);
+    private static final String KAFKA_MIRROR_GROUP_ID = "kafka-mirror";
     private volatile boolean consuming;
     private volatile boolean ended;
 
@@ -34,10 +37,11 @@ public class KafkaMirror implements Mirror {
 
     /**
      * Constructor
-     * @param topicsToSubscribe - a Set of topics to be mirrored
-     * @param sourceBootStrapServers - source bootstrap servers, from which data is consumed
+     *
+     * @param topicsToSubscribe           - a Set of topics to be mirrored
+     * @param sourceBootStrapServers      - source bootstrap servers, from which data is consumed
      * @param destinationBootStrapServers - target bootstrap servers, for which data will be written
-     * @param recordTransformer - strategy to convert records from the source to the target
+     * @param recordTransformer           - strategy to convert records from the source to the target
      */
     public KafkaMirror(Set<String> topicsToSubscribe,
                        String sourceBootStrapServers,
@@ -54,25 +58,24 @@ public class KafkaMirror implements Mirror {
 
     /**
      * Starts the kafka mirror, it will consume the data from topics to subscribe and will publish them to another kafka broker
-     * NOTICE: This method is blocking!
+     * NOTICE: This method is a blocking method!
      */
     @Override
     public void start() {
-        try {
-            Consumer<byte[], byte[]> consumer = getConsumer();
-            consumer.subscribe(topicsToSubscribe);
-
-            consuming = true;
-            do {
-                for (ProducerRecord<byte[], byte[]> producerRecord : recordTransformer.handle(consumer.poll(100L))) {
+        Consumer<byte[], byte[]> consumer = getConsumer();
+        consumer.subscribe(topicsToSubscribe);
+        consuming = true;
+        do {
+            try {
+                for (ProducerRecord<byte[], byte[]> producerRecord : recordTransformer.handle(getConsumer().poll(100L))) {
                     getProducer().send(producerRecord).get();
                 }
                 getConsumer().commitSync();
                 TimeUnit.MILLISECONDS.sleep(10L);
-            } while (consuming);
-        } catch (ExecutionException | InterruptedException ex) {
-            throw new RuntimeException(ex);
-        }
+            } catch (Exception ex) {
+                LOGGER.error("A failure occurred", ex);
+            }
+        } while (consuming);
         ended = true;
     }
 
@@ -80,7 +83,7 @@ public class KafkaMirror implements Mirror {
         if (Objects.isNull(consumer)) {
             Properties props = new Properties();
             props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, sourceBootStrapServers);
-            props.put(ConsumerConfig.GROUP_ID_CONFIG, "kafka-mirror");
+            props.put(ConsumerConfig.GROUP_ID_CONFIG, KAFKA_MIRROR_GROUP_ID);
             props.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, ByteArrayDeserializer.class.getName());
             props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, ByteArrayDeserializer.class.getName());
             props.put(ConsumerConfig.AUTO_COMMIT_INTERVAL_MS_CONFIG, 100);
