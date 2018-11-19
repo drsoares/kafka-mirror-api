@@ -66,6 +66,10 @@ Please read CONTRIBUTING.md for details on our code of conduct, and the process 
 
 + Diogo Soares
 
+### Contributors
+
++ James Cutajar (cutajarj)
+
 ### License
 
 This project is licensed under the Apache License - see the LICENSE.md file for details
