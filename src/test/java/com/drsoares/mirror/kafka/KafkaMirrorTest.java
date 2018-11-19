@@ -14,11 +14,12 @@ import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 
 import static org.mockito.ArgumentMatchers.anyCollection;
 import static org.mockito.ArgumentMatchers.anyIterable;
 import static org.mockito.Mockito.*;
+
+ø
 
 class KafkaMirrorTest {
 
