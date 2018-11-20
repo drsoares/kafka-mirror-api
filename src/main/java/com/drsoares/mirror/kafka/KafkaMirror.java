@@ -26,7 +26,8 @@ import java.util.concurrent.TimeUnit;
 public class KafkaMirror implements Mirror {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(KafkaMirror.class);
-    private static final String KAFKA_MIRROR_GROUP_ID = "kafka-mirror";
+    private final String kafkaMirrorGroupId;
+    private static final String DEFAULT_KAFKA_MIRROR_GROUP_ID="kafka-mirror";
     private volatile boolean consuming;
     private volatile boolean ended;
 
@@ -46,12 +47,24 @@ public class KafkaMirror implements Mirror {
     public KafkaMirror(Set<String> topicsToSubscribe,
                        String sourceBootStrapServers,
                        String destinationBootStrapServers,
-                       RecordTransformer recordTransformer) {
+                       RecordTransformer recordTransformer,
+                       String kafkaMirrorGroupId) {
         this.topicsToSubscribe = topicsToSubscribe;
         this.sourceBootStrapServers = sourceBootStrapServers;
         this.destinationBootStrapServers = destinationBootStrapServers;
         this.recordTransformer = recordTransformer;
+        this.kafkaMirrorGroupId=kafkaMirrorGroupId;
     }
+
+    public KafkaMirror(Set<String> topicsToSubscribe,
+                       String sourceBootStrapServers,
+                       String destinationBootStrapServers,
+                       RecordTransformer recordTransformer){
+        this(topicsToSubscribe,sourceBootStrapServers,destinationBootStrapServers,recordTransformer,DEFAULT_KAFKA_MIRROR_GROUP_ID);
+    }
+
+
+
 
     Producer<byte[], byte[]> producer;
     Consumer<byte[], byte[]> consumer;
@@ -83,7 +96,7 @@ public class KafkaMirror implements Mirror {
         if (Objects.isNull(consumer)) {
             Properties props = new Properties();
             props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, sourceBootStrapServers);
-            props.put(ConsumerConfig.GROUP_ID_CONFIG, KAFKA_MIRROR_GROUP_ID);
+            props.put(ConsumerConfig.GROUP_ID_CONFIG, kafkaMirrorGroupId);
             props.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, ByteArrayDeserializer.class.getName());
             props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, ByteArrayDeserializer.class.getName());
             props.put(ConsumerConfig.AUTO_COMMIT_INTERVAL_MS_CONFIG, 100);
