@@ -45,6 +45,7 @@ public class KafkaMirror implements Mirror {
      * @param sourceBootStrapServers      - source bootstrap servers, from which data is consumed
      * @param destinationBootStrapServers - target bootstrap servers, for which data will be written
      * @param recordTransformer           - strategy to convert records from the source to the target
+     * @param kafkaMirrorGroupId          - A Kafka Mirror consumer group id
      */
     public KafkaMirror(Set<String> topicsToSubscribe,
                        String sourceBootStrapServers,
@@ -58,6 +59,14 @@ public class KafkaMirror implements Mirror {
         this.kafkaMirrorGroupId = kafkaMirrorGroupId;
     }
 
+    /**
+     * Constructor
+     *
+     * @param topicsToSubscribe           - a Set of topics to be mirrored
+     * @param sourceBootStrapServers      - source bootstrap servers, from which data is consumed
+     * @param destinationBootStrapServers - target bootstrap servers, for which data will be written
+     * @param recordTransformer           - strategy to convert records from the source to the target
+     */
     public KafkaMirror(Set<String> topicsToSubscribe,
                        String sourceBootStrapServers,
                        String destinationBootStrapServers,
