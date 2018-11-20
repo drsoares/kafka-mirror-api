@@ -26,8 +26,10 @@ import java.util.concurrent.TimeUnit;
 public class KafkaMirror implements Mirror {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(KafkaMirror.class);
+    private static final String DEFAULT_KAFKA_MIRROR_GROUP_ID = "kafka-mirror";
+
     private final String kafkaMirrorGroupId;
-    private static final String DEFAULT_KAFKA_MIRROR_GROUP_ID="kafka-mirror";
+
     private volatile boolean consuming;
     private volatile boolean ended;
 
@@ -53,18 +55,15 @@ public class KafkaMirror implements Mirror {
         this.sourceBootStrapServers = sourceBootStrapServers;
         this.destinationBootStrapServers = destinationBootStrapServers;
         this.recordTransformer = recordTransformer;
-        this.kafkaMirrorGroupId=kafkaMirrorGroupId;
+        this.kafkaMirrorGroupId = kafkaMirrorGroupId;
     }
 
     public KafkaMirror(Set<String> topicsToSubscribe,
                        String sourceBootStrapServers,
                        String destinationBootStrapServers,
-                       RecordTransformer recordTransformer){
-        this(topicsToSubscribe,sourceBootStrapServers,destinationBootStrapServers,recordTransformer,DEFAULT_KAFKA_MIRROR_GROUP_ID);
+                       RecordTransformer recordTransformer) {
+        this(topicsToSubscribe, sourceBootStrapServers, destinationBootStrapServers, recordTransformer, DEFAULT_KAFKA_MIRROR_GROUP_ID);
     }
-
-
-
 
     Producer<byte[], byte[]> producer;
     Consumer<byte[], byte[]> consumer;
