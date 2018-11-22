@@ -2,6 +2,8 @@ package com.drsoares.mirror.kafka;
 
 import com.drsoares.mirror.Mirror;
 import com.drsoares.mirror.RecordTransformer;
+import com.drsoares.mirror.event.DoNothingKafkaMirrorEvent;
+import com.drsoares.mirror.event.KafkaMirrorEvent;
 import org.apache.kafka.clients.consumer.Consumer;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
@@ -27,6 +29,7 @@ public class KafkaMirror implements Mirror {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(KafkaMirror.class);
     private static final String DEFAULT_KAFKA_MIRROR_GROUP_ID = "kafka-mirror";
+    private static final KafkaMirrorEvent DEFAULT_KAFKA_MIRROR_EVENT=new DoNothingKafkaMirrorEvent();
 
     private final String kafkaMirrorGroupId;
 
@@ -37,6 +40,7 @@ public class KafkaMirror implements Mirror {
     private final String sourceBootStrapServers;
     private final String destinationBootStrapServers;
     private final RecordTransformer recordTransformer;
+    private final KafkaMirrorEvent eventHandler;
 
     /**
      * Constructor
@@ -51,12 +55,14 @@ public class KafkaMirror implements Mirror {
                        String sourceBootStrapServers,
                        String destinationBootStrapServers,
                        RecordTransformer recordTransformer,
-                       String kafkaMirrorGroupId) {
+                       String kafkaMirrorGroupId,
+                       KafkaMirrorEvent eventHandler) {
         this.topicsToSubscribe = topicsToSubscribe;
         this.sourceBootStrapServers = sourceBootStrapServers;
         this.destinationBootStrapServers = destinationBootStrapServers;
         this.recordTransformer = recordTransformer;
         this.kafkaMirrorGroupId = kafkaMirrorGroupId;
+        this.eventHandler=eventHandler;
     }
 
     /**
@@ -71,7 +77,14 @@ public class KafkaMirror implements Mirror {
                        String sourceBootStrapServers,
                        String destinationBootStrapServers,
                        RecordTransformer recordTransformer) {
-        this(topicsToSubscribe, sourceBootStrapServers, destinationBootStrapServers, recordTransformer, DEFAULT_KAFKA_MIRROR_GROUP_ID);
+        this(
+                topicsToSubscribe,
+                sourceBootStrapServers,
+                destinationBootStrapServers,
+                recordTransformer,
+                DEFAULT_KAFKA_MIRROR_GROUP_ID,
+                DEFAULT_KAFKA_MIRROR_EVENT
+        );
     }
 
     Producer<byte[], byte[]> producer;
@@ -86,18 +99,23 @@ public class KafkaMirror implements Mirror {
         Consumer<byte[], byte[]> consumer = getConsumer();
         consumer.subscribe(topicsToSubscribe);
         consuming = true;
+        eventHandler.onStart();
         do {
             try {
                 for (ProducerRecord<byte[], byte[]> producerRecord : recordTransformer.handle(getConsumer().poll(100L))) {
                     getProducer().send(producerRecord).get();
+                    eventHandler.onMessageSent(producerRecord);
                 }
                 getConsumer().commitSync();
                 TimeUnit.MILLISECONDS.sleep(10L);
-            } catch (Exception ex) {
-                LOGGER.error("A failure occurred", ex);
+            } catch (Throwable throwable) {
+                LOGGER.error("A failure occurred", throwable);
+                eventHandler.onMessageError(throwable);
+
             }
         } while (consuming);
         ended = true;
+        eventHandler.onStop();
     }
 
     private Consumer<byte[], byte[]> getConsumer() {
