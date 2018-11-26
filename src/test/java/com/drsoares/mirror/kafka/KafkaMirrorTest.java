@@ -1,6 +1,8 @@
 package com.drsoares.mirror.kafka;
 
 import com.drsoares.mirror.RecordTransformer;
+import com.drsoares.mirror.event.DoNothingKafkaMirrorEvent;
+import com.drsoares.mirror.event.KafkaMirrorEvent;
 import org.apache.kafka.clients.consumer.Consumer;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.producer.Producer;
@@ -11,6 +13,7 @@ import org.junit.jupiter.api.Test;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
@@ -30,12 +33,13 @@ class KafkaMirrorTest {
         Consumer<byte[], byte[]> consumer = mock(Consumer.class);
         RecordTransformer recordTransformer = mock(RecordTransformer.class);
 
-        KafkaMirror kafkaMirror = new KafkaMirror(
-                Collections.singleton("topic"),
-                "sourbroker:9092",
-                "destinationbroker:9092",
-                recordTransformer
-        );
+        KafkaMirror kafkaMirror = new KafkaMirror.Builder()
+                .setTopicsToSubscribe(Collections.singleton("topic"))
+                .setSourceBootStrapServers("sourbroker:9092")
+                .setDestinationBootStrapServers("destinationbroker:9092")
+                .setRecordTransformer(recordTransformer)
+                .build();
+
         kafkaMirror.consumer = consumer;
         kafkaMirror.producer = producer;
 
@@ -67,12 +71,12 @@ class KafkaMirrorTest {
         Consumer<byte[], byte[]> consumer = mock(Consumer.class);
         RecordTransformer recordTransformer = mock(RecordTransformer.class);
 
-        KafkaMirror kafkaMirror = new KafkaMirror(
-                Collections.singleton("topic"),
-                "sourbroker:9092",
-                "destinationbroker:9092",
-                recordTransformer
-        );
+        KafkaMirror kafkaMirror = new KafkaMirror.Builder()
+                .setTopicsToSubscribe(Collections.singleton("topic"))
+                .setSourceBootStrapServers("sourbroker:9092")
+                .setDestinationBootStrapServers("destinationbroker:9092")
+                .setRecordTransformer(recordTransformer)
+                .build();
         kafkaMirror.consumer = consumer;
         kafkaMirror.producer = producer;
 
@@ -108,12 +112,13 @@ class KafkaMirrorTest {
         Consumer<byte[], byte[]> consumer = mock(Consumer.class);
         RecordTransformer recordTransformer = mock(RecordTransformer.class);
 
-        KafkaMirror kafkaMirror = new KafkaMirror(
-                Collections.singleton("topic"),
-                "sourbroker:9092",
-                "destinationbroker:9092",
-                recordTransformer
-        );
+        KafkaMirror kafkaMirror = new KafkaMirror.Builder()
+                .setTopicsToSubscribe(Collections.singleton("topic"))
+                .setSourceBootStrapServers("sourbroker:9092")
+                .setDestinationBootStrapServers("destinationbroker:9092")
+                .setRecordTransformer(recordTransformer)
+                .build();
+
         kafkaMirror.consumer = consumer;
         kafkaMirror.producer = producer;
 
