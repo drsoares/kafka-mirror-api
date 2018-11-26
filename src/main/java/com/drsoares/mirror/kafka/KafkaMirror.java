@@ -29,9 +29,7 @@ public class KafkaMirror implements Mirror {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(KafkaMirror.class);
     private static final String DEFAULT_KAFKA_MIRROR_GROUP_ID = "kafka-mirror";
-    private static final KafkaMirrorEvent DEFAULT_KAFKA_MIRROR_EVENT=new DoNothingKafkaMirrorEvent();
-
-    private final String kafkaMirrorGroupId;
+    private static final KafkaMirrorEvent DEFAULT_KAFKA_MIRROR_EVENT = new DoNothingKafkaMirrorEvent();
 
     private volatile boolean consuming;
     private volatile boolean ended;
@@ -40,7 +38,64 @@ public class KafkaMirror implements Mirror {
     private final String sourceBootStrapServers;
     private final String destinationBootStrapServers;
     private final RecordTransformer recordTransformer;
+    private final String kafkaMirrorGroupId;
     private final KafkaMirrorEvent eventHandler;
+
+
+    public static class Builder {
+
+        private Set<String> topicsToSubscribe;
+        private String sourceBootStrapServers;
+        private String destinationBootStrapServers;
+        private RecordTransformer recordTransformer;
+        private String kafkaMirrorGroupId = DEFAULT_KAFKA_MIRROR_GROUP_ID;
+        private KafkaMirrorEvent eventHandler = DEFAULT_KAFKA_MIRROR_EVENT;
+
+        public Builder() { }
+
+        public Builder setTopicsToSubscribe(Set<String> topicsToSubscribe) {
+            this.topicsToSubscribe = topicsToSubscribe;
+            return this;
+        }
+
+        public Builder setSourceBootStrapServers(String sourceBootStrapServers) {
+            this.sourceBootStrapServers = sourceBootStrapServers;
+            return this;
+        }
+
+        public Builder setDestinationBootStrapServers(String destinationBootStrapServers) {
+            this.destinationBootStrapServers = destinationBootStrapServers;
+            return this;
+        }
+
+        public Builder setRecordTransformer(RecordTransformer recordTransformer) {
+            this.recordTransformer = recordTransformer;
+            return this;
+        }
+
+        public Builder setKafkaMirrorGroupId(String kafkaMirrorGroupId) {
+            this.kafkaMirrorGroupId = kafkaMirrorGroupId;
+            return this;
+        }
+
+        public Builder setEventHandler(KafkaMirrorEvent eventHandler) {
+            this.eventHandler = eventHandler;
+            return this;
+        }
+
+        public KafkaMirror build() {
+            return new KafkaMirror(
+                    topicsToSubscribe,
+                    sourceBootStrapServers,
+                    destinationBootStrapServers,
+                    recordTransformer,
+                    kafkaMirrorGroupId,
+                    eventHandler
+            );
+        }
+
+    }
+
 
     /**
      * Constructor
@@ -49,7 +104,8 @@ public class KafkaMirror implements Mirror {
      * @param sourceBootStrapServers      - source bootstrap servers, from which data is consumed
      * @param destinationBootStrapServers - target bootstrap servers, for which data will be written
      * @param recordTransformer           - strategy to convert records from the source to the target
-     * @param kafkaMirrorGroupId          - A Kafka Mirror consumer group id
+     * @param kafkaMirrorGroupId          - consumer group id used by the mirror
+     * @param eventHandler                - set of callbacks for key points of the mirroring process
      */
     public KafkaMirror(Set<String> topicsToSubscribe,
                        String sourceBootStrapServers,
@@ -62,7 +118,7 @@ public class KafkaMirror implements Mirror {
         this.destinationBootStrapServers = destinationBootStrapServers;
         this.recordTransformer = recordTransformer;
         this.kafkaMirrorGroupId = kafkaMirrorGroupId;
-        this.eventHandler=eventHandler;
+        this.eventHandler = eventHandler;
     }
 
     /**
