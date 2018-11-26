@@ -70,6 +70,7 @@ Please read CONTRIBUTING.md for details on our code of conduct, and the process 
 
 + James Cutajar (cutajarj)
 + Vitor Fernandes (balhau)
++ Eduardo Pinto (efgpinto)
 
 ### License
 
